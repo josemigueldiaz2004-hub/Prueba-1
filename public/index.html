@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Entrenos App</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --muted: #94a3b8;
+      --text: #e5e7eb;
+      --accent: #38bdf8;
+      --accent-2: #22c55e;
+      --danger: #ef4444;
+      --line: rgba(148, 163, 184, .22);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0, var(--bg) 45%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .container { width: min(1120px, 94vw); margin: 0 auto; padding: 28px 0 48px; }
+    header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 22px; }
+    h1 { margin: 0; font-size: clamp(28px, 5vw, 46px); letter-spacing: -1px; }
+    .subtitle { color: var(--muted); margin: 8px 0 0; }
+    .grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: 18px; align-items: start; }
+    .card {
+      background: rgba(17, 24, 39, .88);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 20px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .28);
+      backdrop-filter: blur(8px);
+    }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+    .stat { background: rgba(15, 23, 42, .72); border: 1px solid var(--line); border-radius: 16px; padding: 14px; }
+    .stat strong { display: block; font-size: 24px; }
+    .stat span { color: var(--muted); font-size: 13px; }
+    label { display: block; margin: 12px 0 7px; color: #cbd5e1; font-weight: 650; }
+    input, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #020617;
+      color: var(--text);
+      border-radius: 13px;
+      padding: 12px 13px;
+      outline: none;
+      font-size: 15px;
+    }
+    textarea { min-height: 74px; resize: vertical; }
+    input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(56, 189, 248, .16); }
+    button {
+      border: 0;
+      border-radius: 13px;
+      padding: 11px 14px;
+      color: #001018;
+      background: var(--accent);
+      font-weight: 750;
+      cursor: pointer;
+      transition: transform .14s ease, opacity .14s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    button.secondary { background: #334155; color: var(--text); }
+    button.success { background: var(--accent-2); color: #052e16; width: 100%; margin-top: 14px; }
+    button.danger { background: var(--danger); color: white; }
+    .exercise {
+      border: 1px solid var(--line);
+      background: rgba(2, 6, 23, .42);
+      border-radius: 18px;
+      padding: 14px;
+      margin: 13px 0;
+    }
+    .exercise-head { display: flex; gap: 10px; align-items: end; }
+    .exercise-head > div { flex: 1; }
+    .sets { display: grid; gap: 8px; margin-top: 10px; }
+    .set-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .workout {
+      border: 1px solid var(--line);
+      background: rgba(2, 6, 23, .46);
+      border-radius: 18px;
+      padding: 15px;
+      margin-bottom: 12px;
+    }
+    .workout-top { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+    .workout h3 { margin: 0 0 4px; }
+    .date { color: var(--muted); font-size: 13px; }
+    .exercise-list { margin: 12px 0 0; padding-left: 18px; color: #dbeafe; }
+    .empty { color: var(--muted); text-align: center; padding: 24px 0; }
+    .pill { display: inline-block; font-size: 12px; color: #bae6fd; background: rgba(14, 165, 233, .12); border: 1px solid rgba(125, 211, 252, .25); padding: 5px 9px; border-radius: 999px; margin-top: 6px; }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+      header { align-items: start; flex-direction: column; }
+      .stats { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Entrenos App</h1>
+        <p class="subtitle">Registra ejercicios, series, repeticiones y peso. Sin postureo, solo progreso.</p>
+      </div>
+      <button class="secondary" id="reloadBtn">Actualizar</button>
+    </header>
+
+    <section class="stats" aria-label="Resumen">
+      <div class="stat"><strong id="totalWorkouts">0</strong><span>entrenos</span></div>
+      <div class="stat"><strong id="totalSets">0</strong><span>series</span></div>
+      <div class="stat"><strong id="totalVolume">0</strong><span>kg de volumen</span></div>
+    </section>
+
+    <main class="grid">
+      <section class="card">
+        <h2>Nuevo entreno</h2>
+        <form id="workoutForm">
+          <label for="date">Fecha</label>
+          <input id="date" type="datetime-local" required />
+
+          <label for="name">Nombre</label>
+          <input id="name" type="text" placeholder="Ej. Push, Pull, Pierna, Torso..." required />
+
+          <label for="notes">Notas</label>
+          <textarea id="notes" placeholder="Sensaciones, molestias, descanso, RIR..."></textarea>
+
+          <div id="exercises"></div>
+          <div class="actions">
+            <button type="button" class="secondary" id="addExerciseBtn">+ Ejercicio</button>
+          </div>
+          <button class="success" type="submit">Guardar entreno</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Historial</h2>
+        <div id="workouts"></div>
+      </section>
+    </main>
+  </div>
+
+  <template id="exerciseTemplate">
+    <div class="exercise">
+      <div class="exercise-head">
+        <div>
+          <label>Ejercicio</label>
+          <input class="exercise-name" type="text" placeholder="Ej. Press banca" required />
+        </div>
+        <button type="button" class="danger remove-exercise">Quitar</button>
+      </div>
+      <div class="sets"></div>
+      <div class="actions">
+        <button type="button" class="secondary add-set">+ Serie</button>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    const $ = selector => document.querySelector(selector);
+    const exercisesNode = $('#exercises');
+    const workoutsNode = $('#workouts');
+
+    function nowForInput() {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      return now.toISOString().slice(0, 16);
+    }
+
+    function addExercise(name = '') {
+      const template = $('#exerciseTemplate').content.cloneNode(true);
+      const exercise = template.querySelector('.exercise');
+      exercise.querySelector('.exercise-name').value = name;
+      exercise.querySelector('.remove-exercise').addEventListener('click', () => {
+        exercise.remove();
+        if (!exercisesNode.children.length) addExercise();
+      });
+      exercise.querySelector('.add-set').addEventListener('click', () => addSet(exercise));
+      exercisesNode.appendChild(exercise);
+      addSet(exercise);
+    }
+
+    function addSet(exercise, reps = '', weight = '') {
+      const sets = exercise.querySelector('.sets');
+      const row = document.createElement('div');
+      row.className = 'set-row';
+      row.innerHTML = `
+        <div><label>Reps</label><input class="set-reps" type="number" min="1" value="${reps}" required /></div>
+        <div><label>Peso kg</label><input class="set-weight" type="number" min="0" step="0.5" value="${weight}" required /></div>
+        <button type="button" class="danger">X</button>
+      `;
+      row.querySelector('button').addEventListener('click', () => {
+        row.remove();
+        if (!sets.children.length) addSet(exercise);
+      });
+      sets.appendChild(row);
+    }
+
+    function readForm() {
+      const exercises = [...document.querySelectorAll('.exercise')].map(exercise => ({
+        name: exercise.querySelector('.exercise-name').value.trim(),
+        sets: [...exercise.querySelectorAll('.set-row')].map(row => ({
+          reps: Number(row.querySelector('.set-reps').value),
+          weight: Number(row.querySelector('.set-weight').value)
+        }))
+      }));
+
+      return {
+        date: $('#date').value,
+        name: $('#name').value.trim(),
+        notes: $('#notes').value.trim(),
+        exercises
+      };
+    }
+
+    async function saveWorkout(event) {
+      event.preventDefault();
+      const response = await fetch('/api/workouts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(readForm())
+      });
+      const data = await response.json();
+      if (!response.ok) return alert(data.error || 'No se ha podido guardar.');
+
+      $('#workoutForm').reset();
+      $('#date').value = nowForInput();
+      exercisesNode.innerHTML = '';
+      addExercise();
+      await loadAll();
+    }
+
+    async function deleteWorkout(id) {
+      const sure = confirm('¿Borrar este entreno? Esta serie no cuenta como cardio, pero duele igual.');
+      if (!sure) return;
+      await fetch(`/api/workouts/${id}`, { method: 'DELETE' });
+      await loadAll();
+    }
+
+    function workoutVolume(workout) {
+      return workout.exercises.reduce((total, exercise) => {
+        return total + exercise.sets.reduce((subtotal, set) => subtotal + set.reps * set.weight, 0);
+      }, 0);
+    }
+
+    function renderWorkouts(workouts) {
+      workoutsNode.innerHTML = '';
+      if (!workouts.length) {
+        workoutsNode.innerHTML = '<p class="empty">Todavía no hay entrenos guardados.</p>';
+        return;
+      }
+
+      for (const workout of workouts) {
+        const article = document.createElement('article');
+        article.className = 'workout';
+        const exercisesHtml = workout.exercises.map(exercise => {
+          const sets = exercise.sets.map(set => `${set.reps}x${set.weight}kg`).join(' · ');
+          return `<li><strong>${exercise.name}</strong>: ${sets}</li>`;
+        }).join('');
+
+        article.innerHTML = `
+          <div class="workout-top">
+            <div>
+              <h3>${workout.name}</h3>
+              <div class="date">${new Date(workout.date).toLocaleString()}</div>
+              <span class="pill">Volumen: ${Math.round(workoutVolume(workout))} kg</span>
+            </div>
+            <button class="danger">Eliminar</button>
+          </div>
+          ${workout.notes ? `<p>${workout.notes}</p>` : ''}
+          <ul class="exercise-list">${exercisesHtml}</ul>
+        `;
+        article.querySelector('button').addEventListener('click', () => deleteWorkout(workout.id));
+        workoutsNode.appendChild(article);
+      }
+    }
+
+    async function loadStats() {
+      const response = await fetch('/api/stats');
+      const stats = await response.json();
+      $('#totalWorkouts').textContent = stats.totalWorkouts;
+      $('#totalSets').textContent = stats.totalSets;
+      $('#totalVolume').textContent = Math.round(stats.totalVolume);
+    }
+
+    async function loadWorkouts() {
+      const response = await fetch('/api/workouts');
+      renderWorkouts(await response.json());
+    }
+
+    async function loadAll() {
+      await Promise.all([loadStats(), loadWorkouts()]);
+    }
+
+    $('#workoutForm').addEventListener('submit', saveWorkout);
+    $('#addExerciseBtn').addEventListener('click', () => addExercise());
+    $('#reloadBtn').addEventListener('click', loadAll);
+
+    $('#date').value = nowForInput();
+    addExercise();
+    loadAll();
+  </script>
+</body>
+</html>

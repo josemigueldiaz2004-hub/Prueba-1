@@ -1,0 +1,13 @@
+{
+  "name": "entrenos-app",
+  "version": "1.0.0",
+  "description": "App web sencilla para registrar entrenos, ejercicios, series, repeticiones y pesos.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["entrenos", "fitness", "gym", "node"],
+  "author": "Josemi",
+  "license": "MIT",
+  "dependencies": {}
+}
